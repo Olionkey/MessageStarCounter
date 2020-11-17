@@ -19,7 +19,7 @@ async def scan(ctx, emoji):
         if not channel.permissions_for(ctx.guild.me).read_message_history:
             failed.append(channel.id)
             continue
-        async for m in channel.history(limit=100):
+        async for m in channel.history(limit=25000):
             result_dict.setdefault(m.author.id, 0)
             for r in m.reactions:
                 if r.emoji != emoji:
