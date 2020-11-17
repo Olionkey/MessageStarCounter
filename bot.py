@@ -13,24 +13,25 @@ token = 'your token'
 async def scan(ctx, emoji):
     result_dict = {}
     failed = []
-    for channel in ctx.guild.channels:
-        if type(channel) is not discord.TextChannel:
-            continue
-        if not channel.permissions_for(ctx.guild.me).read_message_history:
-            failed.append(channel.id)
-            continue
-        async for m in channel.history(limit=25000):
-            result_dict.setdefault(m.author.id, 0)
-            for r in m.reactions:
-                if r.emoji != emoji:
-                    continue
-                result_dict[m.author.id] += r.count
+    async with ctx.typing():
+        for channel in ctx.guild.channels:
+            if type(channel) is not discord.TextChannel:
+                continue
+            if not channel.permissions_for(ctx.guild.me).read_message_history:
+                failed.append(channel.id)
+                continue
+            async for m in channel.history(limit=25000):
+                result_dict.setdefault(m.author.id, 0)
+                for r in m.reactions:
+                    if r.emoji != emoji:
+                        continue
+                    result_dict[m.author.id] += r.count
 
-    result_list = sorted(
-        [
-            [r, c] for r, c in result_dict.items()
-        ], key=lambda l: l[1], reverse=True
-    )
+        result_list = sorted(
+            [
+                [r, c] for r, c in result_dict.items()
+            ], key=lambda l: l[1], reverse=True
+        )
 
     p = commands.Paginator(prefix='', suffix='')
     for u, c in result_list:
