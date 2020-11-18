@@ -33,11 +33,24 @@ async def scan(ctx, emoji):
             ], key=lambda l: l[1], reverse=True
         )
 
+    all_users = []
+    user_lookup = {}
+    for u, _ in result_list:
+        all_users.append(int(u))
+
+    result = await ctx.guild.query_members(limit=None, user_ids=all_users)
+    for r in result:
+        user_lookup[r.id] = r
+
     p = commands.Paginator(prefix='', suffix='')
     for u, c in result_list:
         if c == 0:
             continue
-        p.add_line(f"<@{u}>: {c}")
+        if u in user_lookup:
+            un = str(user_lookup[u])
+        else:
+            un = "Deleted User"
+        p.add_line(f"**{un}**: {c}")
 
     all_pages = [discord.Embed(
         title='Results',
