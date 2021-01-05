@@ -1,10 +1,14 @@
-import asyncio
+import os
+from dotenv import load_dotenv
+
 import disputils
 import discord
 from discord.ext import commands
 
+load_dotenv()
+
 bot = commands.Bot(command_prefix='!')
-token = 'your token'
+token = os.getenv('TOKEN')
 
 
 @bot.command()
@@ -13,6 +17,7 @@ token = 'your token'
 async def scan(ctx, emoji):
     result_dict = {}
     failed = []
+    print("Grabbing Messages...")
     async with ctx.typing():
         for channel in ctx.guild.channels:
             if type(channel) is not discord.TextChannel:
@@ -33,24 +38,12 @@ async def scan(ctx, emoji):
             ], key=lambda l: l[1], reverse=True
         )
 
-    all_users = []
-    user_lookup = {}
-    for u, _ in result_list:
-        all_users.append(int(u))
-
-    result = await ctx.guild.query_members(limit=None, user_ids=all_users)
-    for r in result:
-        user_lookup[r.id] = r
-
     p = commands.Paginator(prefix='', suffix='')
-    for u, c in result_list:
-        if c == 0:
+    for uid, count in result_list:
+        if count == 0:
             continue
-        if u in user_lookup:
-            un = str(user_lookup[u])
-        else:
-            un = "Deleted User"
-        p.add_line(f"**{un}**: {c}")
+        un = f"<@{uid}>"
+        p.add_line(f"**{un}**: {count}")
 
     all_pages = [discord.Embed(
         title='Results',
