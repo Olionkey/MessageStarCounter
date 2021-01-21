@@ -19,9 +19,7 @@ async def scan(ctx, emoji):
     failed = []
     print("Grabbing Messages...")
     async with ctx.typing():
-        for channel in ctx.guild.channels:
-            if type(channel) is not discord.TextChannel:
-                continue
+        for channel in ctx.guild.text_channels:
             if not channel.permissions_for(ctx.guild.me).read_message_history:
                 failed.append(channel.id)
                 continue
@@ -57,7 +55,7 @@ async def scan(ctx, emoji):
     if failed != []:
         await ctx.send("some channels failed to scan")
 
-    await paginator.run([ctx.message.author], ctx.channel)
+    await paginator.run([ctx.author], ctx.channel)
 
 
 @bot.event
