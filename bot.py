@@ -1,10 +1,14 @@
-import asyncio
+import os
+from dotenv import load_dotenv
+
 import disputils
 import discord
 from discord.ext import commands
 
+load_dotenv()
+
 bot = commands.Bot(command_prefix='!')
-token = 'your token'
+token = os.getenv('TOKEN')
 
 
 @bot.command()
@@ -13,10 +17,9 @@ token = 'your token'
 async def scan(ctx, emoji):
     result_dict = {}
     failed = []
+    print("Grabbing Messages...")
     async with ctx.typing():
-        for channel in ctx.guild.channels:
-            if type(channel) is not discord.TextChannel:
-                continue
+        for channel in ctx.guild.text_channels:
             if not channel.permissions_for(ctx.guild.me).read_message_history:
                 failed.append(channel.id)
                 continue
@@ -33,24 +36,12 @@ async def scan(ctx, emoji):
             ], key=lambda l: l[1], reverse=True
         )
 
-    all_users = []
-    user_lookup = {}
-    for u, _ in result_list:
-        all_users.append(int(u))
-
-    result = await ctx.guild.query_members(limit=None, user_ids=all_users)
-    for r in result:
-        user_lookup[r.id] = r
-
     p = commands.Paginator(prefix='', suffix='')
-    for u, c in result_list:
-        if c == 0:
+    for uid, count in result_list:
+        if count == 0:
             continue
-        if u in user_lookup:
-            un = str(user_lookup[u])
-        else:
-            un = "Deleted User"
-        p.add_line(f"**{un}**: {c}")
+        un = f"<@{uid}>"
+        p.add_line(f"**{un}**: {count}")
 
     all_pages = [discord.Embed(
         title='Results',
@@ -64,7 +55,7 @@ async def scan(ctx, emoji):
     if failed != []:
         await ctx.send("some channels failed to scan")
 
-    await paginator.run([ctx.message.author], ctx.channel)
+    await paginator.run([ctx.author], ctx.channel)
 
 
 @bot.event
